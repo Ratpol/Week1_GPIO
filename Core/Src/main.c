@@ -117,16 +117,16 @@ int main(void) {
 
 				}
 				else if (Count == 1) {
-					LED1_HalfPeriod = 500;
+					LED1_HalfPeriod = LED1_HalfPeriod/2;//500;
 					Count += 1;
 				}
 				else if (Count == 2) {
-					LED1_HalfPeriod = 250;
+					LED1_HalfPeriod = LED1_HalfPeriod/2;//250;
 					Count += 1;
 				}
 
 				else if (Count == 3) {
-					LED1_HalfPeriod = 125;
+					LED1_HalfPeriod = LED1_HalfPeriod/2;//125;
 					Count = 0;
 				} else {
 					LED1_HalfPeriod = 1000;
