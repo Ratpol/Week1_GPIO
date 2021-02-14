@@ -115,24 +115,22 @@ int main(void) {
 					LED1_HalfPeriod = 1000;
 					Count += 1;
 
-				} else if (Count == 1) {
-					LED1_HalfPeriod = LED1_HalfPeriod / 2; //500;
+				}
+				else if (Count == 1) {
+					LED1_HalfPeriod = LED1_HalfPeriod/2;//500;
 					Count += 1;
-				} else if (Count == 2) {
-					LED1_HalfPeriod = LED1_HalfPeriod / 2; //250;
+				}
+				else if (Count == 2) {
+					LED1_HalfPeriod = LED1_HalfPeriod/2;//250;
 					Count += 1;
 				}
 
 				else if (Count == 3) {
-					LED1_HalfPeriod = LED1_HalfPeriod / 2; //125;
+					LED1_HalfPeriod = LED1_HalfPeriod/2;//125;
 					Count = 0;
 				} else {
 					LED1_HalfPeriod = 1000;
 				}
-			}
-			if (SwitchStateS2[1] == GPIO_PIN_SET
-					&& SwitchStateS2[0] == GPIO_PIN_RESET) {
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET)!=HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 			}
 			SwitchStateS1[1] = SwitchStateS1[0];
 			SwitchStateS2[1] = SwitchStateS1[0];
@@ -151,6 +149,8 @@ int main(void) {
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 			}
 		}
+
+
 
 		/* USER CODE END WHILE */
 
