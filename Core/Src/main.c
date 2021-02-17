@@ -95,7 +95,7 @@ int main(void) {
 	uint16_t LED1_HalfPeriod = 1000; // 1Hz
 	uint32_t TimeStamp = 0;
 	uint32_t ButtonTimeStamp = 0;
-	uint8_t Count = 0;
+	uint8_t CountSW1 = 0;
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -111,31 +111,34 @@ int main(void) {
 			if (SwitchStateS1[1] == GPIO_PIN_SET
 					&& SwitchStateS1[0] == GPIO_PIN_RESET) {
 				//Change Half Period of LED 1
-				if (Count == 0) {
+				if (CountSW1 == 0) {
 					LED1_HalfPeriod = 1000;
-					Count += 1;
-
-				} else if (Count == 1) {
+					CountSW1 += 1;
+				} else if (CountSW1 == 1) {
 					LED1_HalfPeriod = LED1_HalfPeriod / 2; //500;
-					Count += 1;
-				} else if (Count == 2) {
+					CountSW1 += 1;
+				} else if (CountSW1 == 2) {
 					LED1_HalfPeriod = LED1_HalfPeriod / 2; //250;
-					Count += 1;
-				}
-
-				else if (Count == 3) {
+					CountSW1 += 1;
+				} else if (CountSW1 == 3) {
 					LED1_HalfPeriod = LED1_HalfPeriod / 2; //125;
-					Count = 0;
+					CountSW1 = 0;
 				} else {
 					LED1_HalfPeriod = 1000;
+					CountSW1 = 0;
 				}
 			}
 			if (SwitchStateS2[1] == GPIO_PIN_SET
 					&& SwitchStateS2[0] == GPIO_PIN_RESET) {
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET)!=HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+				if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7) == GPIO_PIN_SET) {
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+				} else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7)
+						== GPIO_PIN_RESET) {
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+				}
 			}
 			SwitchStateS1[1] = SwitchStateS1[0];
-			SwitchStateS2[1] = SwitchStateS1[0];
+			SwitchStateS2[1] = SwitchStateS2[0];
 			SwitchStateS3[1] = SwitchStateS3[0];
 			SwitchStateS4[1] = SwitchStateS4[0];
 		}
@@ -151,7 +154,6 @@ int main(void) {
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 			}
 		}
-
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
@@ -176,7 +178,8 @@ void SystemClock_Config(void) {
 	 */
 	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
 	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-	RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+	RCC_OscInitStruct.HSICalibrationValue =
+	RCC_HSICALIBRATION_DEFAULT;
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
 	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
 	RCC_OscInitStruct.PLL.PLLM = 16;
