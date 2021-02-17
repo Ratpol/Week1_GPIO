@@ -92,10 +92,22 @@ int main(void) {
 	GPIO_PinState SwitchStateS2[2];
 	GPIO_PinState SwitchStateS3[2];
 	GPIO_PinState SwitchStateS4[2];
-	uint16_t LED1_HalfPeriod = 1000; // 1Hz
+	uint16_t LED1_HalfPeriod = 0;
 	uint32_t TimeStamp = 0;
+	uint32_t TimeStamp2 = 0;
 	uint32_t ButtonTimeStamp = 0;
-	uint8_t CountSW1 = 0;
+	uint8_t LEDState = 0;
+	uint8_t StateLED1 = 0;
+	uint8_t StateLED3 = 0;
+	uint16_t LED3_TimePeriodOn = 0;
+	uint16_t LED3_TimePeriodOff = 0;
+
+	enum StateLED1 {
+		LED1_0 = 0, LED1_1, LED1_2, LED1_3
+	};
+	enum StateLED3 {
+		LED3_0 = 0, LED3_1
+	};
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -111,23 +123,30 @@ int main(void) {
 			if (SwitchStateS1[1] == GPIO_PIN_SET
 					&& SwitchStateS1[0] == GPIO_PIN_RESET) {
 				//Change Half Period of LED 1
-				if (CountSW1 == 0) {
+				switch (StateLED1) {
+				case LED1_0:
+					StateLED1 = LED1_1;
 					LED1_HalfPeriod = 1000;
-					CountSW1 += 1;
-				} else if (CountSW1 == 1) {
-					LED1_HalfPeriod = LED1_HalfPeriod / 2; //500;
-					CountSW1 += 1;
-				} else if (CountSW1 == 2) {
-					LED1_HalfPeriod = LED1_HalfPeriod / 2; //250;
-					CountSW1 += 1;
-				} else if (CountSW1 == 3) {
-					LED1_HalfPeriod = LED1_HalfPeriod / 2; //125;
-					CountSW1 = 0;
-				} else {
+					break;
+				case LED1_1:
+					StateLED1 = LED1_2;
+					LED1_HalfPeriod = LED1_HalfPeriod / 2;
+					break;
+				case LED1_2:
+					StateLED1 = LED1_3;
+					LED1_HalfPeriod = LED1_HalfPeriod / 2;
+					break;
+				case LED1_3:
+					LED1_HalfPeriod = LED1_HalfPeriod / 2;
+					StateLED1 = LED1_0;
+					break;
+				default:
+					StateLED1 = LED1_0;
 					LED1_HalfPeriod = 1000;
-					CountSW1 = 0;
+					break;
 				}
 			}
+
 			if (SwitchStateS2[1] == GPIO_PIN_SET
 					&& SwitchStateS2[0] == GPIO_PIN_RESET) {
 				if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7) == GPIO_PIN_SET) {
@@ -137,13 +156,30 @@ int main(void) {
 					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 				}
 			}
+			if (SwitchStateS3[1] == GPIO_PIN_SET
+					&& SwitchStateS3[0] == GPIO_PIN_RESET) {
+				switch (StateLED3) {
+				case LED3_0:
+					LED3_TimePeriodOn = 500;
+					LED3_TimePeriodOff = 1500;
+					StateLED3 = LED3_0;
+					break;
+				case LED3_1:
+					LED3_TimePeriodOn = 1500;
+					LED3_TimePeriodOff = 500;
+					StateLED3 = LED3_1;
+					break;
+				default:
+					StateLED3 = LED3_0;
+					break;
+				}
+			}
 			SwitchStateS1[1] = SwitchStateS1[0];
 			SwitchStateS2[1] = SwitchStateS2[0];
 			SwitchStateS3[1] = SwitchStateS3[0];
 			SwitchStateS4[1] = SwitchStateS4[0];
 		}
 
-		//HAL_GetTick(); //mS
 
 		//Run LED
 		if (HAL_GetTick() - TimeStamp >= LED1_HalfPeriod) {
@@ -154,12 +190,28 @@ int main(void) {
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 			}
 		}
-		/* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+		if (LEDState == GPIO_PIN_SET) {
+			if (HAL_GetTick() - TimeStamp2 >= LED3_TimePeriodOn) {
+				LEDState = GPIO_PIN_RESET;
+				TimeStamp2 = HAL_GetTick();
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+			}
+		} else {
+			if (HAL_GetTick() - TimeStamp2 >= LED3_TimePeriodOff) {
+				LEDState = GPIO_PIN_SET;
+				TimeStamp2 = HAL_GetTick();
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+
+			}
+		}
 	}
-	/* USER CODE END 3 */
+
+	/* USER CODE END WHILE */
+
+	/* USER CODE BEGIN 3 */
 }
+/* USER CODE END 3 */
 
 /**
  * @brief System Clock Configuration
@@ -178,8 +230,7 @@ void SystemClock_Config(void) {
 	 */
 	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
 	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-	RCC_OscInitStruct.HSICalibrationValue =
-	RCC_HSICALIBRATION_DEFAULT;
+	RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
 	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
 	RCC_OscInitStruct.PLL.PLLM = 16;
@@ -252,7 +303,8 @@ static void MX_GPIO_Init(void) {
 	HAL_GPIO_WritePin(GPIOA, LD2_Pin | GPIO_PIN_9, GPIO_PIN_RESET);
 
 	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
+			GPIO_PIN_RESET);
 
 	/*Configure GPIO pin Output Level */
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
@@ -276,8 +328,8 @@ static void MX_GPIO_Init(void) {
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/*Configure GPIO pin : PC7 */
-	GPIO_InitStruct.Pin = GPIO_PIN_7;
+	/*Configure GPIO pins : PC7 PC8 PC9 */
+	GPIO_InitStruct.Pin = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
